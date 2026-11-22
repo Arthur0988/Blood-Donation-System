@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Philippine Red Cross • Blood Donation System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased">
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="fixed inset-0 z-50 bg-[#002366] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border-t-8 border-[#ED1C24]">
+      <div class="flex flex-col items-center text-center mb-6">
+        <svg class="w-20 h-20 mb-3" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="98" fill="#002366" />
+          <circle cx="100" cy="100" r="64" fill="#FFFFFF" />
+          <rect x="85" y="54" width="30" height="92" fill="#ED1C24" />
+          <rect x="54" y="85" width="92" height="30" fill="#ED1C24" />
+        </svg>
+        <h1 class="text-xl font-extrabold text-[#002366]">Philippine Red Cross</h1>
+        <p class="text-xs font-medium text-slate-500">National Blood Services &bull; Inventory System</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Staff Username</label>
+          <input id="loginUsername" type="text" value="dr.santos" required class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-[#ED1C24]" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+          <input id="loginPassword" type="password" value="prc2026" required class="w-full px-3.5 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-[#ED1C24]" />
+        </div>
+        <p id="loginError" class="text-xs text-rose-600 font-medium hidden"></p>
+        <button type="submit" class="w-full py-2.5 bg-[#ED1C24] hover:bg-[#c8141b] text-white font-semibold text-sm rounded-xl shadow-sm transition-colors cursor-pointer">
+          Sign In to Blood Bank System
+        </button>
+      </form>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 text-center">
+        <p class="text-[11px] text-slate-400">Demo Credentials: <code class="text-slate-600 font-mono">dr.santos</code> / <code class="text-slate-600 font-mono">prc2026</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP SHELL -->
+  <div id="appShell" class="min-h-screen flex hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#002366] text-white flex flex-col shrink-0 justify-between">
+      <div>
+        <div class="p-6 text-center border-b border-white/10">
+          <svg class="w-16 h-16 mx-auto mb-3" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="98" fill="#002366" stroke="#FFFFFF" stroke-width="4" />
+            <circle cx="100" cy="100" r="64" fill="#FFFFFF" />
+            <rect x="85" y="54" width="30" height="92" fill="#ED1C24" />
+            <rect x="54" y="85" width="92" height="30" fill="#ED1C24" />
+          </svg>
+          <h1 class="font-bold text-base tracking-tight">Philippine Red Cross</h1>
+          <p class="text-[11px] text-blue-200 mt-0.5">National Blood Services &bull; Inventory System</p>
+        </div>
+
+        <nav class="p-4 space-y-1.5">
+          <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-blue-300/70 mb-2">Overview</p>
+          <button onclick="switchTab('overview')" id="nav-overview" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-white text-[#002366] transition-colors cursor-pointer">
+            <span>Dashboard Overview</span>
+          </button>
+
+          <p class="px-3 pt-4 text-[10px] font-bold uppercase tracking-wider text-blue-300/70 mb-2">ERD Database Modules</p>
+          <button onclick="switchTab('donors')" id="nav-donors" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors cursor-pointer">
+            <span>Donors</span>
+            <span class="text-[10px] font-mono bg-white/10 px-1.5 py-0.5 rounded">DONOR</span>
+          </button>
+          <button onclick="switchTab('screening')" id="nav-screening" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors cursor-pointer">
+            <span>Medical Screening</span>
+            <span class="text-[10px] font-mono bg-white/10 px-1.5 py-0.5 rounded">SCREENING</span>
+          </button>
+          <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors cursor-pointer">
+            <span>Bags &amp; Components</span>
+            <span class="text-[10px] font-mono bg-white/10 px-1.5 py-0.5 rounded">2 TABLES</span>
+          </button>
+          <button onclick="switchTab('requests')" id="nav-requests" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors cursor-pointer">
+            <span>Blood Requests</span>
+            <span class="text-[10px] font-mono bg-white/10 px-1.5 py-0.5 rounded">REQUESTS</span>
+          </button>
+          <button onclick="switchTab('staff')" id="nav-staff" class="nav-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-blue-100 hover:bg-white/10 transition-colors cursor-pointer">
+            <span>Medical Staff</span>
+            <span class="text-[10px] font-mono bg-white/10 px-1.5 py-0.5 rounded">STAFF</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- SQL Server Connection Footer -->
+      <div class="p-4">
+        <div class="bg-white rounded-2xl p-3.5 text-slate-800 shadow-sm">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-bold text-slate-700">MSSQL Server Status</span>
+            <span id="sqlBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Connected
+            </span>
+          </div>
+          <p class="text-[11px] font-mono text-slate-500">DB: BloodDonationSystem</p>
+          <p id="sqlRowSummary" class="text-[11px] text-slate-500 mt-0.5">6 Tables &bull; 0 Total SQL Rows</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 min-w-0 p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+      <!-- Top Header -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 mb-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t-4 border-t-[#ED1C24]">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#ED1C24] mb-1">
+            <span class="text-[#002366]">Philippine Red Cross</span>
+            <span class="text-slate-300">&bull;</span>
+            <span>BloodDonationSystem</span>
+            <span class="text-slate-300">/</span>
+            <span id="breadcrumbTable" class="font-mono uppercase bg-red-50 text-[#ED1C24] px-2 py-0.5 rounded-md border border-red-100">OVERVIEW</span>
+          </div>
+          <h2 id="pageTitle" class="text-2xl font-bold text-[#002366] tracking-tight">Dashboard Overview</h2>
+          <p id="pageSubtitle" class="text-sm text-slate-500 mt-0.5">Real-time blood bank inventory, donor eligibility, and hospital request monitoring.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="loadDatabase()" class="px-3 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors cursor-pointer">
+            &#8635; Refresh SQL
+          </button>
+          <div class="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl">
+            <div id="activeUserInitials" class="w-8 h-8 rounded-full bg-[#002366] text-white font-bold text-xs flex items-center justify-center">RS</div>
+            <div class="text-left">
+              <p id="activeUserName" class="text-xs font-semibold text-slate-900">Dr. Roberto Santos</p>
+              <p id="activeUserRole" class="text-[11px] text-slate-500">Physician (StaffID: 1)</p>
+            </div>
+            <button onclick="handleLogout()" class="ml-2 px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors cursor-pointer">
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. OVERVIEW VIEW -->
+      <section id="view-overview" class="tab-view space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <p class="text-xs font-semibold text-slate-500 uppercase">Registered Donors</p>
+            <p id="kpiDonors" class="text-3xl font-extrabold text-[#002366] mt-2">0</p>
+            <p id="kpiDonorsSub" class="text-xs text-emerald-600 font-medium mt-1">0 Eligible</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <p class="text-xs font-semibold text-slate-500 uppercase">Medical Screenings</p>
+            <p id="kpiScreenings" class="text-3xl font-extrabold text-[#002366] mt-2">0</p>
+            <p id="kpiScreeningsSub" class="text-xs text-slate-500 font-medium mt-1">0 Passed / 0 Failed</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <p class="text-xs font-semibold text-slate-500 uppercase">Available Components</p>
+            <p id="kpiComponents" class="text-3xl font-extrabold text-emerald-600 mt-2">0</p>
+            <p id="kpiBagsSub" class="text-xs text-slate-500 font-medium mt-1">Across 0 Blood Bags</p>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <p class="text-xs font-semibold text-slate-500 uppercase">Hospital Blood Requests</p>
+            <p id="kpiRequests" class="text-3xl font-extrabold text-[#ED1C24] mt-2">0</p>
+            <p id="kpiRequestsSub" class="text-xs text-amber-600 font-medium mt-1">0 Pending Fulfillment</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+          <h3 class="text-sm font-bold text-[#002366] mb-4">Available Blood Components by Blood Type</h3>
+          <div id="bloodTypeGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3"></div>
+        </div>
+      </section>
+
+      <!-- 2. DONORS VIEW -->
+      <section id="view-donors" class="tab-view hidden space-y-5">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap gap-3">
+            <input id="donorSearch" oninput="renderDonorsTable()" type="text" placeholder="Search donor name or form..." class="px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-500" />
+            <select id="donorBloodFilter" onchange="renderDonorsTable()" class="px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl">
+              <option value="">All Blood Types</option>
+              <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
+              <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+            </select>
+          </div>
+          <button onclick="openModal('modalDonor')" class="bg-[#ED1C24] hover:bg-[#c8141b] text-white text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer">+ Register Donor</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between">
+            <span class="text-xs font-semibold text-slate-600">Table: <code class="font-mono text-rose-600">dbo.DONOR</code></span>
+            <span id="donorCountLabel" class="text-xs text-slate-500">Showing 0 records</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+                  <th class="py-3 px-4">DonorID</th>
+                  <th class="py-3 px-4">Donation_Form</th>
+                  <th class="py-3 px-4">Full Name</th>
+                  <th class="py-3 px-4">Age / Sex</th>
+                  <th class="py-3 px-4">Weight</th>
+                  <th class="py-3 px-4">Blood_Type</th>
+                  <th class="py-3 px-4">Donor_Status</th>
+                  <th class="py-3 px-4">Last_Donation</th>
+                </tr>
+              </thead>
+              <tbody id="donorsTableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. MEDICAL SCREENING VIEW -->
+      <section id="view-screening" class="tab-view hidden space-y-5">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <select id="screeningResultFilter" onchange="renderScreeningTable()" class="px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl">
+            <option value="">All Screening Results</option>
+            <option value="Passed">Passed</option>
+            <option value="Failed">Failed</option>
+          </select>
+          <button onclick="openModal('modalScreening')" class="bg-[#ED1C24] hover:bg-[#c8141b] text-white text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer">+ New Screening</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between">
+            <span class="text-xs font-semibold text-slate-600">Table: <code class="font-mono text-rose-600">dbo.SCREENING</code></span>
+            <span id="screeningCountLabel" class="text-xs text-slate-500">Showing 0 records</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+                  <th class="py-3 px-4">ScreeningID</th>
+                  <th class="py-3 px-4">Donor</th>
+                  <th class="py-3 px-4">Staff</th>
+                  <th class="py-3 px-4">Screening_Date</th>
+                  <th class="py-3 px-4">BP (Sys/Dia)</th>
+                  <th class="py-3 px-4">Pulse_Rate</th>
+                  <th class="py-3 px-4">Recent_Tattoos</th>
+                  <th class="py-3 px-4">Screening_Result</th>
+                  <th class="py-3 px-4">Interview_Sheet</th>
+                  <th class="py-3 px-4">Medical_History</th>
+                </tr>
+              </thead>
+              <tbody id="screeningTableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. BAGS & COMPONENTS VIEW -->
+      <section id="view-inventory" class="tab-view hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-600">Table: <code class="font-mono text-rose-600">dbo.BLOOD_COMPONENTS</code></span>
+            <div class="flex items-center gap-3">
+              <span id="componentsCountLabel" class="text-xs text-slate-500">Showing 0 records</span>
+              <button onclick="openModal('modalComponent')" class="bg-[#002366] text-white text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">+ Add Component</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+                  <th class="py-3 px-4">ComponentID</th>
+                  <th class="py-3 px-4">Bag_Serial_Number</th>
+                  <th class="py-3 px-4">Component_Type</th>
+                  <th class="py-3 px-4">Storage_Location</th>
+                  <th class="py-3 px-4">Expiration_Date</th>
+                  <th class="py-3 px-4">Availability_Status</th>
+                  <th class="py-3 px-4">RequestID</th>
+                </tr>
+              </thead>
+              <tbody id="componentsTableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-600">Table: <code class="font-mono text-rose-600">dbo.BLOOD_BAGS</code></span>
+            <div class="flex items-center gap-3">
+              <span id="bagsCountLabel" class="text-xs text-slate-500">Showing 0 records</span>
+              <button onclick="openModal('modalBag')" class="bg-[#ED1C24] text-white text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">+ Collect Bag</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+                  <th class="py-3 px-4">Bag_Serial_Number</th>
+                  <th class="py-3 px-4">Donor</th>
+                  <th class="py-3 px-4">Collection_Date</th>
+                  <th class="py-3 px-4">TTI_Status</th>
+                  <th class="py-3 px-4">Bag_Status</th>
+                </tr>
+              </thead>
+              <tbody id="bagsTableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. BLOOD REQUESTS VIEW -->
+      <section id="view-requests" class="tab-view hidden space-y-5">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex justify-between items-center">
+          <span class="text-xs font-semibold text-slate-600">Hospital Blood Requests &amp; Blood Samaritan Waivers</span>
+          <button onclick="openModal('modalRequest')" class="bg-[#ED1C24] text-white text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer">+ New Request</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between">
+            <span class="text-xs font-semibold text-slate-600">Table: <code class="font-mono text-rose-600">dbo.BLOOD_REQUESTS</code></span>
+            <span id="requestsCountLabel" class="text-xs text-slate-500">Showing 0 records</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+                  <th class="py-3 px-4">RequestID</th>
+                  <th class="py-3 px-4">Patient_Name</th>
+                  <th class="py-3 px-4">Hospital_Name</th>
+                  <th class="py-3 px-4">Blood_Type</th>
+                  <th class="py-3 px-4">Qty</th>
+                  <th class="py-3 px-4">Blood_Samaritan</th>
+                  <th class="py-3 px-4">Processing_Fee</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4">Action</th>
+                </tr>
+              </thead>
+              <tbody id="requestsTableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. MEDICAL STAFF VIEW -->
+      <section id="view-staff" class="tab-view hidden space-y-5">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex justify-between items-center">
+          <span class="text-xs font-semibold text-slate-600">Authorized Philippine Red Cross Personnel</span>
+          <button onclick="openModal('modalStaff')" class="bg-[#002366] text-white text-sm font-semibold px-4 py-2 rounded-xl cursor-pointer">+ Add Staff</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex justify-between">
+            <span class="text-xs font-semibold text-slate-600">Table: <code class="font-mono text-rose-600">dbo.MEDICAL_STAFF</code></span>
+            <span id="staffCountLabel" class="text-xs text-slate-500">Showing 0 records</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr class="bg-slate-50 text-[11px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+                  <th class="py-3 px-4">StaffID (PK)</th>
+                  <th class="py-3 px-4">Name</th>
+                  <th class="py-3 px-4">Role</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody" class="divide-y divide-slate-100 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modalDonor" class="modal fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-40">
+    <form onsubmit="submitForm(event, '/api/donors', 'modalDonor')" class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-[#002366]">Register New Donor</h3>
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <input name="Donation_Form" placeholder="Form # (e.g. DF-2026-031)" required class="p-2.5 border rounded-xl" />
+        <select name="Blood_Type" class="p-2.5 border rounded-xl"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select>
+        <input name="First_Name" placeholder="First Name" required class="p-2.5 border rounded-xl" />
+        <input name="Last_Name" placeholder="Last Name" required class="p-2.5 border rounded-xl" />
+        <input name="Birth_Date" type="date" required class="p-2.5 border rounded-xl" />
+        <input name="Age" type="number" placeholder="Age" required class="p-2.5 border rounded-xl" />
+        <select name="Civil_Status" class="p-2.5 border rounded-xl"><option>Single</option><option>Married</option></select>
+        <select name="Sex" class="p-2.5 border rounded-xl"><option>Male</option><option>Female</option></select>
+        <input name="Weight_KG" type="number" step="0.1" placeholder="Weight (kg)" required class="p-2.5 border rounded-xl" />
+        <select name="Donor_Status" class="p-2.5 border rounded-xl"><option>Eligible</option><option>Deferred</option></select>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 text-xs bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-[#ED1C24] text-white font-semibold rounded-xl">Save Donor</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="modalScreening" class="modal fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-40">
+    <form onsubmit="submitForm(event, '/api/screening', 'modalScreening')" class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-[#002366]">Record Pre-Donation Screening</h3>
+      <div class="grid grid-cols-2 gap-3 text-xs">
+        <input name="DonorID" type="number" placeholder="DonorID (e.g. 1)" required class="p-2.5 border rounded-xl" />
+        <input name="StaffID" type="number" placeholder="StaffID (e.g. 1)" required class="p-2.5 border rounded-xl" />
+        <input name="Systolic_BP" type="number" placeholder="Systolic BP (e.g. 120)" required class="p-2.5 border rounded-xl" />
+        <input name="Diastolic_BP" type="number" placeholder="Diastolic BP (e.g. 80)" required class="p-2.5 border rounded-xl" />
+        <input name="Pulse_Rate" type="number" placeholder="Pulse Rate (bpm)" required class="p-2.5 border rounded-xl" />
+        <select name="Screening_Result" class="p-2.5 border rounded-xl"><option>Passed</option><option>Failed</option></select>
+        <input name="Interview_Sheet" placeholder="Interview Sheet Notes" value="Complete and verified" class="p-2.5 border rounded-xl col-span-2" />
+        <input name="Medical_History" placeholder="Medical History" value="No known allergies" class="p-2.5 border rounded-xl col-span-2" />
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 text-xs bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-[#ED1C24] text-white font-semibold rounded-xl">Save Screening</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="modalBag" class="modal fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-40">
+    <form onsubmit="submitForm(event, '/api/bags', 'modalBag')" class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-[#002366]">Collect Blood Bag</h3>
+      <div class="space-y-3 text-xs">
+        <input name="Bag_Serial_Number" placeholder="Serial # (e.g. BAG-2026-1031)" required class="w-full p-2.5 border rounded-xl" />
+        <input name="DonorID" type="number" placeholder="DonorID" required class="w-full p-2.5 border rounded-xl" />
+        <input name="Collection_Date" type="date" required class="w-full p-2.5 border rounded-xl" />
+        <select name="TTI_Status" class="w-full p-2.5 border rounded-xl"><option>Non-Reactive</option><option>Pending</option><option>Reactive</option></select>
+        <select name="Bag_Status" class="w-full p-2.5 border rounded-xl"><option>Processed</option><option>Quarantined</option><option>Discarded</option></select>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 text-xs bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-[#ED1C24] text-white font-semibold rounded-xl">Save Bag</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="modalComponent" class="modal fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-40">
+    <form onsubmit="submitForm(event, '/api/components', 'modalComponent')" class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-[#002366]">Add Processed Component</h3>
+      <div class="space-y-3 text-xs">
+        <input name="Bag_Serial_Number" placeholder="Bag Serial # (e.g. BAG-2026-1030)" required class="w-full p-2.5 border rounded-xl" />
+        <select name="Component_Type" class="w-full p-2.5 border rounded-xl"><option>Packed Red Blood Cells</option><option>Fresh Frozen Plasma</option><option>Platelet Concentrate</option><option>Whole Blood</option></select>
+        <input name="Storage_Location" placeholder="Storage (e.g. Ref-D2)" required class="w-full p-2.5 border rounded-xl" />
+        <input name="Expiration_Date" type="date" required class="w-full p-2.5 border rounded-xl" />
+        <select name="Availability_Status" class="w-full p-2.5 border rounded-xl"><option>Available</option><option>Issued</option><option>Quarantined</option></select>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 text-xs bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-[#002366] text-white font-semibold rounded-xl">Save Component</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="modalRequest" class="modal fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-40">
+    <form onsubmit="submitForm(event, '/api/requests', 'modalRequest')" class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-[#002366]">New Hospital Blood Request</h3>
+      <div class="space-y-3 text-xs">
+        <input name="Patient_Name" placeholder="Patient Name" required class="w-full p-2.5 border rounded-xl" />
+        <input name="Hospital_Name" placeholder="Hospital Name" required class="w-full p-2.5 border rounded-xl" />
+        <select name="Required_Blood_Type" class="w-full p-2.5 border rounded-xl"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select>
+        <input name="Quantity_Requested" type="number" value="1" min="1" required class="w-full p-2.5 border rounded-xl" />
+        <label class="flex items-center gap-2"><input type="checkbox" name="Is_Blood_Samaritan" value="1" /> Blood Samaritan Member (Waive &#8369;1,800 Fee)</label>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 text-xs bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-[#ED1C24] text-white font-semibold rounded-xl">Submit Request</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="modalStaff" class="modal fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-40">
+    <form onsubmit="submitForm(event, '/api/staff', 'modalStaff')" class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-[#002366]">Add Medical Staff</h3>
+      <div class="space-y-3 text-xs">
+        <input name="Name" placeholder="Full Name & Title" required class="w-full p-2.5 border rounded-xl" />
+        <select name="Role" class="w-full p-2.5 border rounded-xl"><option>Physician</option><option>Hematologist</option><option>Phlebotomist</option><option>Screening Nurse</option><option>Medical Technologist</option></select>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 text-xs bg-slate-100 rounded-xl">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-xs bg-[#002366] text-white font-semibold rounded-xl">Save Staff</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin.startsWith('http') ? '' : 'http://localhost:3000';
+    let db = { donors: [], staff: [], screenings: [], bags: [], components: [], requests: [] };
+
+    function formatSqlDate(val) {
+      if (!val) return '—';
+      return String(val).split('T')[0];
+    }
+
+    function statusBadge(status) {
+      const s = String(status || '');
+      const good = ['Eligible', 'Passed', 'Non-Reactive', 'Processed', 'Available', 'Fulfilled'].includes(s);
+      const warn = ['Pending', 'Quarantined'].includes(s);
+      const cls = good
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : warn
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-rose-50 text-rose-700 border-rose-200';
+      return `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cls}">${s}</span>`;
+    }
+
+    function getDonorLabel(id) {
+      const d = db.donors.find(x => x.DonorID === id);
+      return d ? `${d.First_Name} ${d.Last_Name} (${d.Blood_Type})` : `Donor #${id}`;
+    }
+
+    function getStaffLabel(id) {
+      const st = db.staff.find(x => x.StaffID === id);
+      return st ? st.Name : `Staff #${id}`;
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errEl = document.getElementById('loginError');
+      errEl.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          errEl.textContent = data.message || 'Invalid credentials.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        document.getElementById('activeUserName').textContent = data.user.Name;
+        document.getElementById('activeUserRole').textContent = `${data.user.Role} (StaffID: ${data.user.StaffID})`;
+        document.getElementById('activeUserInitials').textContent = data.user.Name.split(' ').map(n => n[0]).slice(0, 2).join('');
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('appShell').classList.remove('hidden');
+        await loadDatabase();
+      } catch (err) {
+        errEl.textContent = 'Cannot reach Node.js server on http://localhost:3000.';
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      document.getElementById('appShell').classList.add('hidden');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+    }
+
+    const TAB_META = {
+      overview: ['OVERVIEW', 'Dashboard Overview', 'Real-time blood bank inventory, donor eligibility, and hospital request monitoring.'],
+      donors: ['DBO.DONOR', 'Registered Blood Donors', 'Complete donor registry, blood types, and donation eligibility status.'],
+      screening: ['DBO.SCREENING', 'Medical Screening', 'Pre-donation vital signs, physical exams, and deferral records conducted by medical staff.'],
+      inventory: ['DBO.BLOOD_BAGS & COMPONENTS', 'Blood Bags & Components Inventory', 'Collected blood bags, TTI testing results, and separated blood components.'],
+      requests: ['DBO.BLOOD_REQUESTS', 'Hospital Blood Requests', 'Patient transfusion requests, Blood Samaritan fee waivers, and fulfillment tracking.'],
+      staff: ['DBO.MEDICAL_STAFF', 'Medical Staff Directory', 'Physicians, phlebotomists, screening nurses, and medical technologists.']
+    };
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`view-${tab}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-[#002366]', 'font-semibold');
+        btn.classList.add('text-blue-100');
+      });
+      const activeBtn = document.getElementById(`nav-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-white', 'text-[#002366]', 'font-semibold');
+        activeBtn.classList.remove('text-blue-100');
+      }
+
+      const [crumb, title, sub] = TAB_META[tab] || TAB_META.overview;
+      document.getElementById('breadcrumbTable').textContent = crumb;
+      document.getElementById('pageTitle').textContent = title;
+      document.getElementById('pageSubtitle').textContent = sub;
+    }
+
+    async function loadDatabase() {
+      try {
+        const res = await fetch(`${API_BASE}/api/all`);
+        const data = await res.json();
+        db.donors = data.donors || [];
+        db.staff = data.staff || [];
+        db.screenings = (data.screening || data.screenings || []).map(s => ({
+          ...s,
+          Screening_Date: formatSqlDate(s.Screening_Date),
+          Has_Recent_Tattoos: s.Has_Recent_Tattoos ? 1 : 0
+        }));
+        db.bags = data.bags || [];
+        db.components = data.components || [];
+        db.requests = data.requests || [];
+
+        const totalRows = db.donors.length + db.staff.length + db.screenings.length + db.bags.length + db.components.length + db.requests.length;
+        document.getElementById('sqlRowSummary').textContent = `6 Tables • ${totalRows} Total SQL Rows`;
+
+        renderOverview();
+        renderDonorsTable();
+        renderScreeningTable();
+        renderInventoryTables();
+        renderRequestsTable();
+        renderStaffTable();
+      } catch (err) {
+        console.error('Failed to load database:', err);
+      }
+    }
+
+    function renderOverview() {
+      document.getElementById('kpiDonors').textContent = db.donors.length;
+      const eligible = db.donors.filter(d => d.Donor_Status === 'Eligible').length;
+      document.getElementById('kpiDonorsSub').textContent = `${eligible} Eligible / ${db.donors.length - eligible} Deferred`;
+
+      document.getElementById('kpiScreenings').textContent = db.screenings.length;
+      const passed = db.screenings.filter(s => s.Screening_Result === 'Passed').length;
+      document.getElementById('kpiScreeningsSub').textContent = `${passed} Passed / ${db.screenings.length - passed} Failed`;
+
+      const availComp = db.components.filter(c => c.Availability_Status === 'Available');
+      document.getElementById('kpiComponents').textContent = availComp.length;
+      document.getElementById('kpiBagsSub').textContent = `Across ${db.bags.length} Blood Bags`;
+
+      document.getElementById('kpiRequests').textContent = db.requests.length;
+      const pending = db.requests.filter(r => r.Request_Status === 'Pending').length;
+      document.getElementById('kpiRequestsSub').textContent = `${pending} Pending Fulfillment`;
+
+      const bagBloodMap = {};
+      db.bags.forEach(b => {
+        const donor = db.donors.find(d => d.DonorID === b.DonorID);
+        if (donor) bagBloodMap[b.Bag_Serial_Number] = donor.Blood_Type;
+      });
+
+      const types = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+      document.getElementById('bloodTypeGrid').innerHTML = types.map(bt => {
+        const count = availComp.filter(c => bagBloodMap[c.Bag_Serial_Number] === bt).length;
+        return `
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 text-center">
+            <span class="text-lg font-extrabold text-[#ED1C24]">${bt}</span>
+            <p class="text-2xl font-bold text-[#002366] mt-1">${count}</p>
+            <p class="text-[11px] text-slate-500">Available Units</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDonorsTable() {
+      const q = document.getElementById('donorSearch').value.toLowerCase();
+      const bt = document.getElementById('donorBloodFilter').value;
+      const filtered = db.donors.filter(d => {
+        const matchQ = !q || `${d.First_Name} ${d.Last_Name} ${d.Donation_Form}`.toLowerCase().includes(q);
+        const matchBt = !bt || d.Blood_Type === bt;
+        return matchQ && matchBt;
+      });
+      document.getElementById('donorCountLabel').textContent = `Showing ${filtered.length} of ${db.donors.length} records`;
+      document.getElementById('donorsTableBody').innerHTML = filtered.map(d => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 font-mono font-bold">${d.DonorID}</td>
+          <td class="py-3 px-4 font-mono text-rose-600 font-semibold">${d.Donation_Form}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${d.Last_Name}, ${d.First_Name}</td>
+          <td class="py-3 px-4">${d.Age} / ${d.Sex}</td>
+          <td class="py-3 px-4">${d.Weight_KG} kg</td>
+          <td class="py-3 px-4 font-bold text-[#ED1C24]">${d.Blood_Type}</td>
+          <td class="py-3 px-4">${statusBadge(d.Donor_Status)}</td>
+          <td class="py-3 px-4 font-mono text-slate-600">${formatSqlDate(d.Last_Donation_Date)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderScreeningTable() {
+      const resFilter = document.getElementById('screeningResultFilter').value;
+      const filtered = db.screenings.filter(s => !resFilter || s.Screening_Result === resFilter);
+      document.getElementById('screeningCountLabel').textContent = `Showing ${filtered.length} of ${db.screenings.length} records`;
+      document.getElementById('screeningTableBody').innerHTML = filtered.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 font-mono font-bold text-slate-800">${s.ScreeningID}</td>
+          <td class="py-3 px-4"><span class="font-mono font-semibold text-rose-600">#${s.DonorID}</span> ${getDonorLabel(s.DonorID)}</td>
+          <td class="py-3 px-4"><span class="font-mono font-semibold text-slate-600">#${s.StaffID}</span> ${getStaffLabel(s.StaffID)}</td>
+          <td class="py-3 px-4 font-mono text-slate-600">${s.Screening_Date}</td>
+          <td class="py-3 px-4 font-mono font-semibold text-slate-800">${s.Systolic_BP}/${s.Diastolic_BP} mmHg</td>
+          <td class="py-3 px-4 font-mono text-slate-700">${s.Pulse_Rate} bpm</td>
+          <td class="py-3 px-4">${s.Has_Recent_Tattoos ? '<span class="text-rose-600 font-semibold">1 (Yes)</span>' : '<span class="text-slate-500">0 (No)</span>'}</td>
+          <td class="py-3 px-4">${statusBadge(s.Screening_Result)}</td>
+          <td class="py-3 px-4 text-slate-600 max-w-[180px] truncate">${s.Interview_Sheet || '—'}</td>
+          <td class="py-3 px-4 text-slate-600 max-w-[200px] truncate">${s.Medical_History || '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderInventoryTables() {
+      document.getElementById('componentsCountLabel').textContent = `Showing ${db.components.length} records`;
+      document.getElementById('componentsTableBody').innerHTML = db.components.map(c => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 font-mono font-bold">${c.ComponentID}</td>
+          <td class="py-3 px-4 font-mono text-rose-600 font-semibold">${c.Bag_Serial_Number}</td>
+          <td class="py-3 px-4 font-semibold">${c.Component_Type}</td>
+          <td class="py-3 px-4 font-mono">${c.Storage_Location}</td>
+          <td class="py-3 px-4 font-mono">${formatSqlDate(c.Expiration_Date)}</td>
+          <td class="py-3 px-4">${statusBadge(c.Availability_Status)}</td>
+          <td class="py-3 px-4 font-mono">${c.RequestID ? `#${c.RequestID}` : '—'}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('bagsCountLabel').textContent = `Showing ${db.bags.length} records`;
+      document.getElementById('bagsTableBody').innerHTML = db.bags.map(b => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 font-mono font-bold text-rose-600">${b.Bag_Serial_Number}</td>
+          <td class="py-3 px-4">#${b.DonorID} ${getDonorLabel(b.DonorID)}</td>
+          <td class="py-3 px-4 font-mono">${formatSqlDate(b.Collection_Date)}</td>
+          <td class="py-3 px-4">${statusBadge(b.TTI_Status)}</td>
+          <td class="py-3 px-4">${statusBadge(b.Bag_Status)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderRequestsTable() {
+      document.getElementById('requestsCountLabel').textContent = `Showing ${db.requests.length} records`;
+      document.getElementById('requestsTableBody').innerHTML = db.requests.map(r => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 font-mono font-bold">${r.RequestID}</td>
+          <td class="py-3 px-4 font-semibold">${r.Patient_Name}</td>
+          <td class="py-3 px-4">${r.Hospital_Name}</td>
+          <td class="py-3 px-4 font-bold text-[#ED1C24]">${r.Required_Blood_Type}</td>
+          <td class="py-3 px-4 font-mono">${r.Quantity_Requested}</td>
+          <td class="py-3 px-4">${r.Is_Blood_Samaritan ? '<span class="text-emerald-600 font-semibold">Yes (Waived)</span>' : 'No'}</td>
+          <td class="py-3 px-4 font-mono">&#8369;${Number(r.Processing_Fee).toFixed(2)}</td>
+          <td class="py-3 px-4">${statusBadge(r.Request_Status)}</td>
+          <td class="py-3 px-4">
+            ${r.Request_Status === 'Pending'
+              ? `<button onclick="fulfillRequest(${r.RequestID})" class="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-semibold cursor-pointer">Fulfill</button>`
+              : '—'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderStaffTable() {
+      document.getElementById('staffCountLabel').textContent = `Showing ${db.staff.length} records`;
+      document.getElementById('staffTableBody').innerHTML = db.staff.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4 font-mono font-bold">${s.StaffID}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${s.Name}</td>
+          <td class="py-3 px-4">${s.Role}</td>
+        </tr>
+      `).join('');
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal').forEach(m => {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+      });
+    }
+
+    async function submitForm(e, endpoint, modalId) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
+      await fetch(`${API_BASE}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      e.target.reset();
+      closeModals();
+      await loadDatabase();
+    }
+
+    async function fulfillRequest(id) {
+      await fetch(`${API_BASE}/api/requests/${id}/fulfill`, { method: 'PUT' });
+      await loadDatabase();
+    }
+  </script>
+</body>
+</html>
